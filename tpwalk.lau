@@ -1,49 +1,176 @@
--- TP Walk Loadstring Script
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local player = Players.LocalPlayer
+--// gui.lua
+-- Updated GUI module with ON/OFF toggle buttons
 
--- Wait for the character
-local char = player.Character or player.CharacterAdded:Wait()
-local root = char:WaitForChild("HumanoidRootPart")
-local humanoid = char:WaitForChild("Humanoid")
+local GUI = {}
 
--- TP Walk variables
-local tpWalkEnabled = false
-local tpSpeed = 4
+function GUI.Create(options)
+    local player = game:GetService("Players").LocalPlayer
 
--- Create a small GUI toggle button if it doesn't exist
-local ScreenGui = player:FindFirstChildOfClass("PlayerGui"):FindFirstChild("RynoxHub") or Instance.new("ScreenGui", player.PlayerGui)
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Size = UDim2.new(0, 150, 0, 40)
-ToggleButton.Position = UDim2.new(0.5, -75, 0, 50)
-ToggleButton.Text = "TP Walk: OFF"
-ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.Font = Enum.Font.GothamBold
-ToggleButton.TextSize = 18
-ToggleButton.Parent = ScreenGui
-ToggleButton.ZIndex = 10
-pcall(function() ToggleButton:Destroy() end) -- in case of reload, clean duplicates
+    -- Main ScreenGui
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = options.GuiName or "RynoxHub"
+    ScreenGui.IgnoreGuiInset = true
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Render step movement
-RunService.RenderStepped:Connect(function(dt)
-    if tpWalkEnabled and humanoid and root and humanoid.MoveDirection.Magnitude > 0 then
-        root.CFrame = root.CFrame + (humanoid.MoveDirection * tpSpeed * dt * 30)
+    -- Main Frame
+    local Frame = Instance.new("Frame")
+    Frame.Size = options.GUIConfig.Size
+    Frame.Position = UDim2.new(0.5, -Frame.Size.X.Offset / 2, 0.5, -Frame.Size.Y.Offset / 2)
+    Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Frame.BackgroundTransparency = 0.4
+    Frame.Active = true
+    Frame.Draggable = true
+    Frame.Parent = ScreenGui
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 15)
+
+    -- Title
+    local TitleData = options.TitleConfig[1]
+    local Title = Instance.new("TextLabel")
+    Title.Text = TitleData.Name
+    Title.Size = TitleData.Size
+    Title.Position = TitleData.Position
+    Title.BackgroundTransparency = 1
+    Title.TextColor3 = TitleData.Color
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 22
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = Frame
+
+    -- Tabs Panel
+    local TabFrame = Instance.new("Frame")
+    TabFrame.Size = options.TabsConfig.Size
+    TabFrame.Position = options.TabsConfig.Position
+    TabFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    TabFrame.BackgroundTransparency = 0.3
+    TabFrame.Parent = Frame
+    Instance.new("UICorner", TabFrame)
+
+    local TabScroll = Instance.new("ScrollingFrame")
+    TabScroll.Size = UDim2.new(1,0,1,0)
+    TabScroll.CanvasSize = UDim2.new(0,0,0,0)
+    TabScroll.ScrollBarThickness = 4
+    TabScroll.BackgroundTransparency = 1
+    TabScroll.Parent = TabFrame
+
+    local UIListLayoutTabs = Instance.new("UIListLayout")
+    UIListLayoutTabs.Padding = UDim.new(0,5)
+    UIListLayoutTabs.Parent = TabScroll
+
+    -- Main Content Area
+    local ContentFrame = Instance.new("Frame")
+    ContentFrame.Size = options.MainFrameConfig.Size
+    ContentFrame.Position = options.MainFrameConfig.Position
+    ContentFrame.BackgroundTransparency = 1
+    ContentFrame.Parent = Frame
+
+    -- Create section with optional On/Off toggle
+    local function CreateSection(tabFrame, sectionData)
+        local sectionLabel = Instance.new("TextLabel")
+        sectionLabel.Size = UDim2.new(1,-10,0,25)
+        sectionLabel.Text = "-- "..sectionData.Name.." --"
+        sectionLabel.TextColor3 = Color3.fromRGB(255,255,255)
+        sectionLabel.BackgroundTransparency = 1
+        sectionLabel.Font = Enum.Font.GothamBold
+        sectionLabel.TextSize = 20
+        sectionLabel.Parent = tabFrame
+
+        for _, element in ipairs(sectionData.Elements) do
+            if element.Type == "Button" then
+                local btn = Instance.new("TextButton")
+                btn.Size = UDim2.new(0,180,0,45)
+                btn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+                btn.Text = element.Name
+                btn.TextColor3 = Color3.fromRGB(255,255,255)
+                btn.Font = Enum.Font.GothamBold
+                btn.TextSize = 20
+                btn.Parent = tabFrame
+                Instance.new("UICorner", btn)
+
+                if element.Mode == "On/Off" then
+                    -- Create toggle indicator button
+                    local toggleBtn = Instance.new("TextButton")
+                    toggleBtn.Size = UDim2.new(0,50,0,45)
+                    toggleBtn.Position = UDim2.new(0,190,0,0)
+                    toggleBtn.BackgroundColor3 = Color3.fromRGB(150,0,0)
+                    toggleBtn.Text = "OFF"
+                    toggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+                    toggleBtn.Font = Enum.Font.GothamBold
+                    toggleBtn.TextSize = 18
+                    toggleBtn.Parent = tabFrame
+                    Instance.new("UICorner", toggleBtn)
+
+                    local isOn = false
+                    local function updateToggle()
+                        isOn = not isOn
+                        toggleBtn.Text = isOn and "ON" or "OFF"
+                        toggleBtn.BackgroundColor3 = isOn and Color3.fromRGB(0,200,0) or Color3.fromRGB(150,0,0)
+                        element.Function(isOn)
+                    end
+
+                    toggleBtn.MouseButton1Click:Connect(updateToggle)
+                else
+                    btn.MouseButton1Click:Connect(function()
+                        element.Function(btn)
+                    end)
+                end
+            elseif element.Type == "Text" then
+                local txt = Instance.new("TextLabel")
+                txt.Size = UDim2.new(1,-10,0,25)
+                txt.Text = element.Name
+                txt.TextColor3 = Color3.fromRGB(255,255,255)
+                txt.BackgroundTransparency = 1
+                txt.Font = Enum.Font.GothamBold
+                txt.TextSize = 18
+                txt.Parent = tabFrame
+            end
+        end
     end
-end)
 
--- Toggle button click
-ToggleButton.MouseButton1Click:Connect(function()
-    tpWalkEnabled = not tpWalkEnabled
-    ToggleButton.Text = "TP Walk: " .. (tpWalkEnabled and "ON" or "OFF")
-end)
+    -- Tabs logic
+    local activeTab = nil
+    for _, tabData in ipairs(options.Tabs) do
+        local tabButton = Instance.new("TextButton")
+        tabButton.Text = tabData.Name
+        tabButton.Size = options.TabButtonConfig.DefaultSize
+        tabButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+        tabButton.TextColor3 = Color3.fromRGB(255,255,255)
+        tabButton.Font = Enum.Font.GothamBold
+        tabButton.TextSize = 18
+        tabButton.Parent = TabScroll
+        Instance.new("UICorner", tabButton)
 
--- Update on respawn
-player.CharacterAdded:Connect(function(newChar)
-    char = newChar
-    root = char:WaitForChild("HumanoidRootPart")
-    humanoid = char:WaitForChild("Humanoid")
-    task.wait(1)
-    ToggleButton.Text = "TP Walk: " .. (tpWalkEnabled and "ON" or "OFF")
-end)
+        local tabContent = Instance.new("ScrollingFrame")
+        tabContent.Size = UDim2.new(1,0,1,0)
+        tabContent.Position = UDim2.new(0,0,0,0)
+        tabContent.CanvasSize = UDim2.new(0,0,0,0)
+        tabContent.ScrollBarThickness = 6
+        tabContent.BackgroundTransparency = 1
+        tabContent.Visible = false
+        tabContent.Parent = ContentFrame
+
+        local layout = Instance.new("UIListLayout")
+        layout.Padding = UDim.new(0,8)
+        layout.Parent = tabContent
+
+        for _, section in ipairs(tabData.Sections) do
+            CreateSection(tabContent, section)
+        end
+
+        tabButton.MouseButton1Click:Connect(function()
+            if activeTab then
+                activeTab.Visible = false
+            end
+            tabContent.Visible = true
+            activeTab = tabContent
+        end)
+    end
+
+    UIListLayoutTabs:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        TabScroll.CanvasSize = UDim2.new(0,0,0,UIListLayoutTabs.AbsoluteContentSize.Y + 10)
+    end)
+
+    return Frame
+end
+
+return GUI
