@@ -1,1 +1,49 @@
-local tpSpeed = 4 local tpWalkEnabled = false local char = player.Character or player.CharacterAdded:Wait() local root = char:WaitForChild("HumanoidRootPart") local humanoid = char:WaitForChild("Humanoid") RunService.RenderStepped:Connect(function(dt) if tpWalkEnabled and humanoid and root and humanoid.MoveDirection.Magnitude > 0 then root.CFrame = root.CFrame + (humanoid.MoveDirection * tpSpeed * dt * 30) end end) ToggleButton.MouseButton1Click:Connect(function() tpWalkEnabled = not tpWalkEnabled ToggleButton.Text = "TP Walk: " .. (tpWalkEnabled and "ON" or "OFF") end) player.CharacterAdded:Connect(function(newChar) char = newChar root = char:WaitForChild("HumanoidRootPart") humanoid = char:WaitForChild("Humanoid") task.wait(1) ToggleButton.Text = "TP Walk: " .. (tpWalkEnabled and "ON" or "OFF") end)
+-- TP Walk Loadstring Script
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+-- Wait for the character
+local char = player.Character or player.CharacterAdded:Wait()
+local root = char:WaitForChild("HumanoidRootPart")
+local humanoid = char:WaitForChild("Humanoid")
+
+-- TP Walk variables
+local tpWalkEnabled = false
+local tpSpeed = 4
+
+-- Create a small GUI toggle button if it doesn't exist
+local ScreenGui = player:FindFirstChildOfClass("PlayerGui"):FindFirstChild("RynoxHub") or Instance.new("ScreenGui", player.PlayerGui)
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 150, 0, 40)
+ToggleButton.Position = UDim2.new(0.5, -75, 0, 50)
+ToggleButton.Text = "TP Walk: OFF"
+ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 18
+ToggleButton.Parent = ScreenGui
+ToggleButton.ZIndex = 10
+pcall(function() ToggleButton:Destroy() end) -- in case of reload, clean duplicates
+
+-- Render step movement
+RunService.RenderStepped:Connect(function(dt)
+    if tpWalkEnabled and humanoid and root and humanoid.MoveDirection.Magnitude > 0 then
+        root.CFrame = root.CFrame + (humanoid.MoveDirection * tpSpeed * dt * 30)
+    end
+end)
+
+-- Toggle button click
+ToggleButton.MouseButton1Click:Connect(function()
+    tpWalkEnabled = not tpWalkEnabled
+    ToggleButton.Text = "TP Walk: " .. (tpWalkEnabled and "ON" or "OFF")
+end)
+
+-- Update on respawn
+player.CharacterAdded:Connect(function(newChar)
+    char = newChar
+    root = char:WaitForChild("HumanoidRootPart")
+    humanoid = char:WaitForChild("Humanoid")
+    task.wait(1)
+    ToggleButton.Text = "TP Walk: " .. (tpWalkEnabled and "ON" or "OFF")
+end)
