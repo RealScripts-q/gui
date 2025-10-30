@@ -1,4 +1,3 @@
--- gui.lua
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
@@ -71,7 +70,8 @@ UIListLayoutTabs.Padding = UDim.new(0,5)
 UIListLayoutTabs.Parent = TabScroll
 
 -- Container for tab contents
-local TabsContent = {} -- TabsContent["Main"].Sections["SectionName"] = Frame
+local TabsContent = {}
+local TabButtonsList = {}
 
 local function CreateTabContent(tabName)
     local contentFrame = Instance.new("Frame")
@@ -87,19 +87,18 @@ local function CreateTabContent(tabName)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Parent = contentFrame
 
-    -- Section holder
-    contentFrame.Sections = {} -- Sections[sectionName] = Frame
-
+    contentFrame.Sections = {} 
     TabsContent[tabName] = contentFrame
     return contentFrame
 end
 
 -- Default Tabs
 local defaultTabs = {"Main","Info"}
-for _, tabName in ipairs(defaultTabs) do
+local firstTabButton
+
+for i, tabName in ipairs(defaultTabs) do
     local content = CreateTabContent(tabName)
 
-    -- Create Tab Button
     local TabButton = Instance.new("TextButton")
     TabButton.Text = tabName
     TabButton.Size = UDim2.new(1,-5,0,35)
@@ -114,15 +113,31 @@ for _, tabName in ipairs(defaultTabs) do
         for _, f in pairs(TabsContent) do
             f.Visible = false
         end
+        for _, btn in ipairs(TabButtonsList) do
+            btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+        end
+
         content.Visible = true
+        TabButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
     end)
+
+    table.insert(TabButtonsList, TabButton)
+
+    if i == 1 then
+        firstTabButton = TabButton
+    end
 end
 
 UIListLayoutTabs:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     TabScroll.CanvasSize = UDim2.new(0,0,0,UIListLayoutTabs.AbsoluteContentSize.Y+10)
 end)
 
--- Bottom Section (Avatar + Welcome)
+-- Show first tab by default
+if firstTabButton then
+    firstTabButton:Activate()
+end
+
+-- Bottom Section
 local BottomFrame = Instance.new("Frame")
 BottomFrame.Size = UDim2.new(1,0,0,50)
 BottomFrame.Position = UDim2.new(0,0,1,-50)
@@ -178,7 +193,6 @@ CloseBtn.MouseButton1Click:Connect(function()
     Frame:Destroy()
 end)
 
--- Return for config
 return {
     TabsContent = TabsContent,
     ScreenGui = ScreenGui
