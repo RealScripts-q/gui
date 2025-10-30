@@ -2,7 +2,7 @@
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
--- ScreenGui
+--// ===== GUI CREATION =====
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "RynoxHub"
 ScreenGui.IgnoreGuiInset = true
@@ -11,8 +11,8 @@ ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- Main Frame
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 500, 0, 320)
-Frame.Position = UDim2.new(0.5, -250, 0.5, -160)
+Frame.Size = UDim2.new(0, 500, 0, 320) -- default, configurable in LocalScript
+Frame.Position = UDim2.new(0.5, -Frame.Size.X.Offset / 2, 0.5, -Frame.Size.Y.Offset / 2)
 Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 Frame.BackgroundTransparency = 0.4
 Frame.Active = true
@@ -20,105 +20,85 @@ Frame.Draggable = true
 Frame.Parent = ScreenGui
 Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 15)
 
--- Title Label
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Text = "Rynox Hub"
-TitleLabel.Size = UDim2.new(0, 200, 0, 40)
-TitleLabel.Position = UDim2.new(0, 10, 0, 0)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.TextSize = 22
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Parent = Frame
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Text = "Rynox Hub" -- configurable
+Title.Size = UDim2.new(0, 200, 0, 40)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 22
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Frame
 
--- Top Buttons
+-- Top Buttons (fullscreen & close)
 local function MakeTopButton(text, color, posX)
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 30, 0, 30)
-	btn.Position = UDim2.new(1, posX, 0, 5)
-	btn.BackgroundColor3 = color
-	btn.Text = text
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 20
-	btn.Parent = Frame
-	Instance.new("UICorner", btn)
-	return btn
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 30, 0, 30)
+    btn.Position = UDim2.new(1, posX, 0, 5)
+    btn.BackgroundColor3 = color
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 20
+    btn.Parent = Frame
+    Instance.new("UICorner", btn)
+    return btn
 end
 
 local CloseBtn = MakeTopButton("X", Color3.fromRGB(50, 0, 0), -35)
 local FullBtn = MakeTopButton("⛶", Color3.fromRGB(30, 30, 30), -70)
 
--- Tabs Panel
-local TabScrollFrame = Instance.new("Frame")
-TabScrollFrame.Size = UDim2.new(0, 110, 1, -60)
-TabScrollFrame.Position = UDim2.new(0, 0, 0, 40)
-TabScrollFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-TabScrollFrame.BackgroundTransparency = 0.3
-TabScrollFrame.Parent = Frame
-Instance.new("UICorner", TabScrollFrame)
+-- Tabs Panel (Scroll)
+local TabFrame = Instance.new("Frame")
+TabFrame.Size = UDim2.new(0, 110, 1, -60) -- configurable
+TabFrame.Position = UDim2.new(0, 0, 0, 40)
+TabFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+TabFrame.BackgroundTransparency = 0.3
+TabFrame.Parent = Frame
+Instance.new("UICorner", TabFrame)
 
 local TabScroll = Instance.new("ScrollingFrame")
 TabScroll.Size = UDim2.new(1, 0, 1, 0)
 TabScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 TabScroll.ScrollBarThickness = 4
 TabScroll.BackgroundTransparency = 1
-TabScroll.Parent = TabScrollFrame
+TabScroll.Parent = TabFrame
 
 local UIListLayoutTabs = Instance.new("UIListLayout")
 UIListLayoutTabs.Padding = UDim.new(0, 5)
 UIListLayoutTabs.Parent = TabScroll
 
--- Container for tab contents & sections
-local TabsContent = {} -- TabsContent[tabName].Sections[sectionName] = Frame
+-- Content Frames
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(1, -130, 1, -60)
+MainFrame.Position = UDim2.new(0, 130, 0, 40)
+MainFrame.BackgroundTransparency = 1
+MainFrame.Parent = Frame
 
-local function CreateTabContent(tabName)
-	local contentFrame = Instance.new("Frame")
-	contentFrame.Size = UDim2.new(1, -130, 1, -60)
-	contentFrame.Position = UDim2.new(0, 130, 0, 40)
-	contentFrame.BackgroundTransparency = 1
-	contentFrame.Visible = false
-	contentFrame.Parent = Frame
+local MainListLayout = Instance.new("UIListLayout")
+MainListLayout.Padding = UDim.new(0, 10)
+MainListLayout.FillDirection = Enum.FillDirection.Vertical
+MainListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+MainListLayout.Parent = MainFrame
 
-	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0, 10)
-	layout.FillDirection = Enum.FillDirection.Vertical
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Parent = contentFrame
+local InfoFrame = Instance.new("Frame")
+InfoFrame.Size = MainFrame.Size
+InfoFrame.Position = MainFrame.Position
+InfoFrame.BackgroundTransparency = 1
+InfoFrame.Visible = false
+InfoFrame.Parent = Frame
 
-	contentFrame.Sections = {} -- Sections[sectionName] = Frame
-	TabsContent[tabName] = contentFrame
-	return contentFrame
-end
-
--- Default Tabs
-local defaultTabs = {"Main", "Info"}
-for _, tabName in ipairs(defaultTabs) do
-	local content = CreateTabContent(tabName)
-
-	-- Create Tab Button
-	local TabButton = Instance.new("TextButton")
-	TabButton.Text = tabName
-	TabButton.Size = UDim2.new(1, -5, 0, 35)
-	TabButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	TabButton.Font = Enum.Font.GothamBold
-	TabButton.TextSize = 18
-	TabButton.Parent = TabScroll
-	Instance.new("UICorner", TabButton)
-
-	TabButton.MouseButton1Click:Connect(function()
-		for _, f in pairs(TabsContent) do
-			f.Visible = false
-		end
-		content.Visible = true
-	end)
-end
-
-UIListLayoutTabs:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-	TabScroll.CanvasSize = UDim2.new(0, 0, 0, UIListLayoutTabs.AbsoluteContentSize.Y + 10)
-end)
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Size = UDim2.new(1, -20, 1, -20)
+InfoLabel.Position = UDim2.new(0, 10, 0, 10)
+InfoLabel.Text = "Created by Rynox Team" -- configurable
+InfoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Font = Enum.Font.GothamBold
+InfoLabel.TextSize = 22
+InfoLabel.Parent = InfoFrame
 
 -- Bottom Section (Avatar + Welcome)
 local BottomFrame = Instance.new("Frame")
@@ -134,7 +114,7 @@ Avatar.Size = UDim2.new(0, 40, 0, 40)
 Avatar.Position = UDim2.new(0, 10, 0.5, -20)
 Avatar.BackgroundTransparency = 1
 local ok, thumb = pcall(function()
-	return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+    return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
 end)
 if ok then Avatar.Image = thumb end
 Avatar.Parent = BottomFrame
@@ -150,43 +130,24 @@ Welcome.TextSize = 20
 Welcome.TextXAlignment = Enum.TextXAlignment.Left
 Welcome.Parent = BottomFrame
 task.spawn(function()
-	local txt = "Welcome, " .. player.DisplayName
-	Welcome.Text = ""
-	for i = 1, #txt do
-		Welcome.Text = string.sub(txt, 1, i)
-		task.wait(0.05)
-	end
+    local txt = "Welcome, " .. player.DisplayName
+    Welcome.Text = ""
+    for i = 1, #txt do
+        Welcome.Text = string.sub(txt, 1, i)
+        task.wait(0.05)
+    end
 end)
 
--- Fullscreen & Close
-local isFullscreen = false
-local originalSize = Frame.Size
-local originalPos = Frame.Position
-
-FullBtn.MouseButton1Click:Connect(function()
-	isFullscreen = not isFullscreen
-	if isFullscreen then
-		Frame:TweenSizeAndPosition(UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3)
-	else
-		Frame:TweenSizeAndPosition(originalSize, originalPos, Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3)
-	end
-end)
-
-CloseBtn.MouseButton1Click:Connect(function()
-	Frame:Destroy()
-end)
-
--- Show first tab by default
-TabsContent["Main"].Visible = true
-
--- Export objects for config.lua
+-- Export objects for config LocalScript
 return {
-	TabsContent = TabsContent,
-	ScreenGui = ScreenGui,
-	Frame = Frame,
-	BottomFrame = BottomFrame,
-	Welcome = Welcome,
-	Avatar = Avatar,
-	CloseBtn = CloseBtn,
-	FullBtn = FullBtn
+    ScreenGui = ScreenGui,
+    Frame = Frame,
+    MainFrame = MainFrame,
+    InfoFrame = InfoFrame,
+    InfoLabel = InfoLabel,
+    TabScroll = TabScroll,
+    CloseBtn = CloseBtn,
+    FullBtn = FullBtn,
+    TitleLabel = Title,
+    Welcome = Welcome
 }
